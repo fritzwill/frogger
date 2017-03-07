@@ -1,0 +1,11 @@
+Tutorials on SDL2 and LazyFoo
+
+Create compilable code utilizing one of the above. This can be a box moving
+across the scree if we want
+
+Log the time spent
+
+Document what was worked on, achieved, and learned
+
+All the above required pieces can be placed in a single file called 
+report.txt
