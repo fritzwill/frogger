@@ -3,6 +3,10 @@ Tutorials on SDL2 and LazyFoo
 Create compilable code utilizing one of the above. This can be a box moving
 across the scree if we want
 
+Create objects for Mario, blocks, enemies, and anything else that needs to be made
+
+Create a background
+
 Log the time spent
 
 Document what was worked on, achieved, and learned
