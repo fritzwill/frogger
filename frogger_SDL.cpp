@@ -7,6 +7,11 @@
 #include <string>
 #include <iostream>
 #include <vector>
+enum /*class*/ Direction{
+    Left,
+    Right
+};
+
 // PROTOTYPES
 bool InitEverything();
 bool InitSDL();
@@ -17,7 +22,7 @@ SDL_Texture * LoadTexture(const std::string &str);
 void Render();
 void RunGame();
 void AddEnemy();
-void AddLog();
+void AddLog(Direction dir );
 void MoveEnemies();
 void MoveLogs();
 void ResetPlayerPos();
@@ -45,10 +50,6 @@ SDL_Texture* playerTexture;
 SDL_Texture* backgroundTexture;
 SDL_Texture* barTexture;
 
-enum class Direction{
-    Left,
-    Right
-};
 
 struct Log{
     Log(SDL_Rect pos_, int speed_, Direction dir_){
@@ -90,13 +91,13 @@ int main(int argc, char*args[]){
     backgroundTexture   = LoadTexture("img/background.bmp");
     barTexture          = LoadTexture("img/bar.bmp");
     srand(time(NULL));
-    AddLog();
-    AddLog();
-    AddLog();
-    AddLog();
-    AddLog();
-    AddLog();
-    AddLog();
+    AddLog(Right);
+    AddLog(Left);
+    AddLog(Right);
+    AddLog(Left);
+    AddLog(Right);
+    AddLog(Left);
+    AddLog(Right);
     lastEnemyPos+=50;
     AddEnemy();
     AddEnemy();
@@ -331,17 +332,17 @@ void AddEnemy(){
     lastEnemyPos += 25;
 }
 
-void AddLog(){
-    if((rand() % 2) == 0){
-        logs.push_back(Log({rand() % 100, lastEnemyPos, 20, 20}, 2, Direction::Right));
-        logs.push_back(Log({rand() % 100 + 75, lastEnemyPos, 20, 20}, 2, Direction::Right));
-        logs.push_back(Log({rand() % 100 + 175, lastEnemyPos, 20, 20}, 2, Direction::Right));
-    }
+void AddLog(Direction dir){
+    //if((rand() % 2) == 0){
+        logs.push_back(Log({rand() % 100, lastEnemyPos, 40, 20}, 2, dir));
+        logs.push_back(Log({rand() % 100 + 75, lastEnemyPos, 40, 20}, 2, dir));
+        logs.push_back(Log({rand() % 100 + 175, lastEnemyPos, 20, 20}, 2, dir));
+    /*}
     else{
-        logs.push_back(Log({rand() % 100, lastEnemyPos, 20, 20}, 2, Direction::Left));
-        logs.push_back(Log({rand() % 100 + 100, lastEnemyPos, 20, 20}, 2, Direction::Left));
+        logs.push_back(Log({rand() % 100, lastEnemyPos, 40, 20}, 2, Direction::Left));
+        logs.push_back(Log({rand() % 100 + 100, lastEnemyPos, 40, 20}, 2, Direction::Left));
         logs.push_back(Log({rand() % 100 + 200, lastEnemyPos, 20, 20}, 2, Direction::Left));
-    }
+    }*/
     lastEnemyPos += 25;
 }
 void ResetPlayerPos(){
