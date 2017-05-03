@@ -26,7 +26,7 @@ bool CheckEnemyCollisions();
 bool CheckLogCollisions();
 
 // WINDOW SIZE
-SDL_Rect windowRect = {900, 200, 150, 500};
+SDL_Rect windowRect = {900, 200, 300, 500};
 
 int movementFactor = 25;
 int lastEnemyPos = 50;
@@ -76,6 +76,7 @@ std::vector<Enemy> enemies;
 std::vector<Log> logs;
 
 int main(int argc, char*args[]){
+
     backgroundPos.x = 0;
     backgroundPos.y = 0;
     backgroundPos.w = windowRect.w;
@@ -83,27 +84,27 @@ int main(int argc, char*args[]){
 
     if( !InitEverything()) return -1;
 
-    enemyTexture        = LoadTexture("enemy.png");
-    logTexture          = LoadTexture("log.png");
-    playerTexture       = LoadTexture("player.png");
-    backgroundTexture   = LoadTexture("background.bmp");
-    barTexture          = LoadTexture("bar.bmp");
+    enemyTexture        = LoadTexture("img/truck.png");
+    logTexture          = LoadTexture("img/logLong.png");
+    playerTexture       = LoadTexture("img/frog.png");
+    backgroundTexture   = LoadTexture("img/background.bmp");
+    barTexture          = LoadTexture("img/bar.bmp");
     srand(time(NULL));
     AddLog();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
     AddLog();
-
+    AddLog();
+    AddLog();
+    AddLog();
+    AddLog();
+    AddLog();
+    lastEnemyPos+=50;
+    AddEnemy();
+    AddEnemy();
+    AddEnemy();
+    AddEnemy();
+    AddEnemy();
+    AddEnemy();
+    AddEnemy();
     // Init top and bottom bar
     topBar.x = 0;
     topBar.y = 0;
