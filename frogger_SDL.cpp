@@ -2,6 +2,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -86,6 +88,7 @@ int main(int argc, char*args[]){
     playerTexture       = LoadTexture("player.png");
     backgroundTexture   = LoadTexture("background.bmp");
     barTexture          = LoadTexture("bar.bmp");
+    srand(time(NULL));
     AddLog();
     AddEnemy();
     AddEnemy();
@@ -329,10 +332,14 @@ void AddEnemy(){
 
 void AddLog(){
     if((rand() % 2) == 0){
-        logs.push_back(Log({rand() % 300, lastEnemyPos, 20, 20}, 2, Direction::Right));
+        logs.push_back(Log({rand() % 100, lastEnemyPos, 20, 20}, 2, Direction::Right));
+        logs.push_back(Log({rand() % 100 + 75, lastEnemyPos, 20, 20}, 2, Direction::Right));
+        logs.push_back(Log({rand() % 100 + 175, lastEnemyPos, 20, 20}, 2, Direction::Right));
     }
     else{
-        logs.push_back(Log({rand() % 300, lastEnemyPos, 20, 20}, 2, Direction::Left));
+        logs.push_back(Log({rand() % 100, lastEnemyPos, 20, 20}, 2, Direction::Left));
+        logs.push_back(Log({rand() % 100 + 100, lastEnemyPos, 20, 20}, 2, Direction::Left));
+        logs.push_back(Log({rand() % 100 + 200, lastEnemyPos, 20, 20}, 2, Direction::Left));
     }
     lastEnemyPos += 25;
 }
