@@ -147,6 +147,10 @@ void RunGame(){
                     case SDLK_UP:
                         playerPos.y -= movementFactor;
                         break;
+                    /* implement pause */
+                    /*case SDLK_p:
+                        while(SDL_PollEvent(&event){*/
+
                     default:
                         break;
                 }
@@ -324,10 +328,14 @@ bool CheckEnemyCollisions(){
 
 void AddEnemy(){
     if((rand() % 2 ) == 0){
-        enemies.push_back(Enemy({rand() % 300, lastEnemyPos, 20, 20}, 1, Direction::Right));
+        enemies.push_back(Enemy({rand() % 100, lastEnemyPos, 20, 20}, 1, Direction::Right));
+        enemies.push_back(Enemy({rand() % 100 + 75, lastEnemyPos, 20, 20}, 1, Direction::Right));
+        enemies.push_back(Enemy({rand() % 100 + 175, lastEnemyPos, 20, 20}, 1, Direction::Right));
     }
     else{
-        enemies.push_back(Enemy({rand() % 300, lastEnemyPos, 20, 20}, 1, Direction::Left));
+        enemies.push_back(Enemy({rand() % 100, lastEnemyPos, 20, 20}, 1, Direction::Left));
+        enemies.push_back(Enemy({rand() % 100 + 75, lastEnemyPos, 20, 20}, 1, Direction::Left));
+        enemies.push_back(Enemy({rand() % 100 + 175, lastEnemyPos, 20, 20}, 1, Direction::Left));
     }
     lastEnemyPos += 25;
 }
