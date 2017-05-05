@@ -60,7 +60,7 @@ bool CheckEnemyCollisions();
 bool CheckLogCollisions();
 Log * getLog();
 void addEnemies();
-void loadObjects();
+void loadObjects(bool);
 void gameOver();
 
 // Global Variables
@@ -88,20 +88,21 @@ std::vector<Log> logs;
 
 // main function
 int main(int argc, char*args[]){
-    loadObjects();
+    loadObjects(true);
     RunGame();
 }
 
 // funciton to load all the textures and set initial values of their locations
-void loadObjects(){
+void loadObjects(bool firstTime){
     backgroundPos.x = 0;
     backgroundPos.y = 0;
     backgroundPos.w = windowRect.w;
     backgroundPos.h = windowRect.h;
     
-    // check for failed initialization
-    if( !InitEverything()) return;
-
+    if (firstTime){
+        // check for failed initialization
+        if( !InitEverything()) return;
+    }
     // Load textures
     enemyTexture        = LoadTexture("img/truck.png");
     logTexture          = LoadTexture("img/logLong.png");
@@ -527,7 +528,7 @@ void gameOver(){
                         enemies.clear();
                         lastEnemyPos = 50;
                         dead = false;
-                        loadObjects();
+                        loadObjects(false);
                         RunGame();
                         break;
                     case SDLK_q:
