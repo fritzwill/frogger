@@ -1,7 +1,6 @@
 //Using SDL, SDL_image, standard math, and strings
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -43,7 +42,7 @@ bool CreateWindow();
 bool CreateRenderer();
 void SetupRenderer();
 SDL_Texture * LoadTexture(const std::string &str);
-void Render(int);
+void Render();
 void RunGame();
 void AddEnemy();
 void AddLog(Direction dir );
@@ -54,7 +53,6 @@ bool CheckCollision( const SDL_Rect &rect1, const SDL_Rect &rect2);
 bool CheckEnemyCollisions();
 bool CheckLogCollisions();
 Log * getLog();
-int getDiff(SDL_Rect, SDL_Rect);
 void addEnemies();
 
 // Global Variables
@@ -77,7 +75,6 @@ SDL_Texture* logTexture;
 SDL_Texture* playerTexture;
 SDL_Texture* backgroundTexture;
 SDL_Texture* barTexture;
-SDL_Texture* scoreTexture;
 
 std::vector<Enemy> enemies;
 std::vector<Log> logs;
@@ -117,26 +114,16 @@ int main(int argc, char*args[]){
     playerPos.h = 15;
     ResetPlayerPos();
     
-    // Initialize score
-    scorePos.x = 10;
-    scorePos.y = windowRect.h - 20;
-    scorePos.w = windowRect.w / 8;
-    scorePos.h = 20;
-
     RunGame();
 }
 
 void RunGame(){
     bool loop = true;
-    int score = 0;
-    int diff = 0;
     bool onLog = false;
     Log *currLog;
     while(loop){
         SDL_Event event;
         if (onLog){
-
-            //diff = getDiff(playerPos, currLog->pos);
             switch(currLog->dir){
                 case(Right):
                     playerPos.x += currLog->speed;
@@ -184,18 +171,14 @@ void RunGame(){
         // Check collisions against logs
         if (CheckLogCollisions()){
             onLog = true;
-            currLog = getLog();
-            //std::cout << "in func" << std::endl;
-            //diff = getDiff(playerPos, currLog->pos);
-            
-            
+            currLog = getLog(); // get the log that plaer is on in order to 
+                                // maintain posision
         }
         else{
             onLog = false;
             currLog = NULL;
         }
         
-        std::cout << "passed func" << std::endl;
         if (!onLog && playerPos.y < 224 && playerPos.y > 45) { // not on log and above halfway
             ResetPlayerPos();
         }
@@ -206,7 +189,6 @@ void RunGame(){
         
         if(playerPos.y < (topBar.y + topBar.h)){
             ResetPlayerPos();
-            score += 10;
             // increase speed of objects
             std::vector<int> logSpeeds;
             std::vector<int> truckSpeeds;
@@ -231,7 +213,7 @@ void RunGame(){
             }
             
         }
-        Render(score);
+        Render();
 
         // add a 16 msec delay so it funs at ~60fps
         SDL_Delay(16);
@@ -251,7 +233,7 @@ SDL_Texture* LoadTexture(const std::string &str){
     return texture;
 }
 
-void Render(int score){
+void Render(){
     // Clear the window and make it red
     SDL_RenderClear(renderer);
 
@@ -265,22 +247,12 @@ void Render(int score){
 
     SDL_RenderCopy(renderer, playerTexture, NULL, &playerPos);
     
-    // Score
-    TTF_Font * Sans = TTF_OpenFont("Sans.ttf", 18);
-    SDL_Color Red = {255, 0, 0};
-    SDL_Surface * scoreSurface = TTF_RenderText_Solid(Sans, (const char *)(&score), Red);
-    scoreTexture = SDL_CreateTextureFromSurface(renderer, scoreSurface);
-    SDL_RenderCopy(renderer, scoreTexture, NULL, &scorePos);
     // render the changes above
     SDL_RenderPresent(renderer);
 }
 bool InitEverything(){
     if(!InitSDL()) return false;
-    if(!TTF_Init()) {
-        std::cout << "fuck" << std::endl;
-        printf("TT: %s", TTF_GetError());
-        return false;
-    }
+
     if(!CreateWindow()) return false;
     if(!CreateRenderer()) return false;
     SetupRenderer();
@@ -408,10 +380,6 @@ bool CheckEnemyCollisions(){
     return false;
 
 }
-int getDiff(SDL_Rect player, SDL_Rect log){
-    return player.x - log.x;
-}
-
 void AddEnemy(){
     int speed = rand() % 3 + 1;
     if((rand() % 2 ) == 0){
