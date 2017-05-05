@@ -1,4 +1,8 @@
-//Using SDL, SDL_image, standard math, and strings
+// replica of the game frogger using SDL2 library
+// Date: 5/1/2017
+// Authors: Will Fritz, Tommy Lynch
+
+// Using SDL, SDL_image, standard math, and strings
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
@@ -7,7 +11,9 @@
 #include <string>
 #include <iostream>
 #include <vector>
-enum /*class*/ Direction{
+
+// help with directions of objects
+enum Direction{
     Left,
     Right
 };
@@ -54,6 +60,8 @@ bool CheckEnemyCollisions();
 bool CheckLogCollisions();
 Log * getLog();
 void addEnemies();
+void loadObjects();
+void gameOver();
 
 // Global Variables
 SDL_Rect windowRect = {900, 200, 300, 500};
@@ -68,7 +76,6 @@ SDL_Rect playerPos;
 SDL_Rect topBar;
 SDL_Rect bottomBar;
 SDL_Rect backgroundPos;
-SDL_Rect scorePos;
 
 SDL_Texture* enemyTexture;
 SDL_Texture* logTexture;
@@ -79,15 +86,23 @@ SDL_Texture* barTexture;
 std::vector<Enemy> enemies;
 std::vector<Log> logs;
 
+// main function
 int main(int argc, char*args[]){
+    loadObjects();
+    RunGame();
+}
 
+// funciton to load all the textures and set initial values of their locations
+void loadObjects(){
     backgroundPos.x = 0;
     backgroundPos.y = 0;
     backgroundPos.w = windowRect.w;
     backgroundPos.h = windowRect.h;
+    
+    // check for failed initialization
+    if( !InitEverything()) return;
 
-    if( !InitEverything()) return -1;
-
+    // Load textures
     enemyTexture        = LoadTexture("img/truck.png");
     logTexture          = LoadTexture("img/logLong.png");
     playerTexture       = LoadTexture("img/frog.png");
@@ -113,16 +128,20 @@ int main(int argc, char*args[]){
     playerPos.w = 20;
     playerPos.h = 15;
     ResetPlayerPos();
-    
-    RunGame();
+
 }
 
+// funciton to run the actual game
 void RunGame(){
-    bool loop = true;
-    bool onLog = false;
-    Log *currLog;
+    bool loop = true; // used to run game loop
+    bool paused = false; // used to handle if player pauses
+    bool onLog = false; // used to keep track if player is on log
+    Log *currLog; // what log the player is on
+    
     while(loop){
         SDL_Event event;
+        
+        // handle if player is on log (move with log)
         if (onLog){
             switch(currLog->dir){
                 case(Right):
@@ -133,7 +152,8 @@ void RunGame(){
                     break;
             }
         }
-            
+        
+        // handle user inputs  
         while(SDL_PollEvent(&event)){
             if(event.type == SDL_QUIT)
                 loop = false;
@@ -151,45 +171,67 @@ void RunGame(){
                     case SDLK_UP:
                         playerPos.y -= movementFactor;
                         break;
-                    /* implement pause */
-                    /*case SDLK_p:
-                        while(SDL_PollEvent(&event){*/
-
+                    // implement pause 
+                    case SDLK_p:
+                        SDL_Event pauseEvent;
+                        paused = true;
+                        while(paused){
+                            while(SDL_PollEvent(&pauseEvent)){
+                                if (pauseEvent.type == SDL_QUIT){
+                                    loop = false;
+                                    paused = false;
+                                    continue;
+                                }
+                                else if(pauseEvent.type == SDL_KEYDOWN){
+                                    if (pauseEvent.key.keysym.sym == SDLK_p){
+                                        paused = false;
+                                    }
+                                }
+                            }
+                        }
+                        break;
                     default:
                         break;
                 }
             }
         }
+        
+        // move objects
         MoveEnemies();
         MoveLogs();
 
         // Check collisions against enemies
-        if(CheckEnemyCollisions()) 
-            std::cout << "HAHAHA";            
-            //ResetPlayerPos();
+        if(CheckEnemyCollisions()){
+            gameOver();  
+            loop = false;  
+            continue;      
+        }
 
         // Check collisions against logs
         if (CheckLogCollisions()){
             onLog = true;
-            currLog = getLog(); // get the log that plaer is on in order to 
-                                // maintain posision
+            currLog = getLog(); // getting log player is on
         }
         else{
             onLog = false;
             currLog = NULL;
         }
         
-        if (!onLog && playerPos.y < 224 && playerPos.y > 45) { // not on log and above halfway
-            ResetPlayerPos();
+        // handle if player is in water and not on log
+        if (!onLog && playerPos.y < 224 && playerPos.y > 45) { 
+            gameOver();
+            loop = false;
+            continue;
         }
 
-        // check collision against bottom bar
+        // check collision against top bar (win the level)
         // since top bar covers the entire width, we only need to check y value
         // topBar.y refers to the top of the top bar, so topBar.y + topBar.h
         
         if(playerPos.y < (topBar.y + topBar.h)){
             ResetPlayerPos();
-            // increase speed of objects
+
+            // increase speed of new objects
             std::vector<int> logSpeeds;
             std::vector<int> truckSpeeds;
             for(auto &p : logs){
@@ -218,8 +260,10 @@ void RunGame(){
         // add a 16 msec delay so it funs at ~60fps
         SDL_Delay(16);
     }
+    return;
 }
 
+// loads png texture give string of the png's path
 SDL_Texture* LoadTexture(const std::string &str){
     // Load image as SDL_Surface
     SDL_Surface* surface = IMG_Load(str.c_str());
@@ -233,6 +277,7 @@ SDL_Texture* LoadTexture(const std::string &str){
     return texture;
 }
 
+// renderes all the objects to the screen so the game can run (called every loop iteration)
 void Render(){
     // Clear the window and make it red
     SDL_RenderClear(renderer);
@@ -250,6 +295,8 @@ void Render(){
     // render the changes above
     SDL_RenderPresent(renderer);
 }
+
+// false if something does not initialize correctly
 bool InitEverything(){
     if(!InitSDL()) return false;
 
@@ -259,6 +306,7 @@ bool InitEverything(){
     return true;
 }
 
+// helper to initialize SDL (false if can't initialize)
 bool InitSDL(){
     if(SDL_Init(SDL_INIT_EVERYTHING) == -1){
         std::cout << "Failed to initialize SDL : " << SDL_GetError() << std::endl;
@@ -267,6 +315,7 @@ bool InitSDL(){
     return true;
 }
 
+// helper to create the game window (false if can't create)
 bool CreateWindow(){
     window = SDL_CreateWindow("Server", windowRect.x, windowRect.y, windowRect.w, windowRect.h, 0);
 
@@ -277,6 +326,7 @@ bool CreateWindow(){
     return true;
 }
 
+// helper to create renderer (false if can't create)
 bool CreateRenderer(){
     renderer = SDL_CreateRenderer(window, -1, 0);
     if(renderer == nullptr){
@@ -286,6 +336,7 @@ bool CreateRenderer(){
     return true;
 }
 
+// helper to finilize renderer info
 void SetupRenderer(){
     // set size of renderer to the same as window
     SDL_RenderSetLogicalSize(renderer, windowRect.w, windowRect.h);
@@ -294,6 +345,7 @@ void SetupRenderer(){
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 }
 
+// moves eveyr log on the screen according to their direction and speed
 void MoveLogs(){
     for(auto &p : logs){
         if(p.dir == Direction::Right){
@@ -310,6 +362,8 @@ void MoveLogs(){
         }
     }
 }
+
+// moves every enemy according to their direction and speed
 void MoveEnemies(){
     for(auto &p : enemies){
         if(p.dir == Direction::Right){
@@ -327,6 +381,8 @@ void MoveEnemies(){
     }
 }
 
+// checks for a general collision given two objects (all objects are rectangles)
+// true if collision, false otherwise
 bool CheckCollision(const SDL_Rect &rect1, const SDL_Rect &rect2){
     // find edges of rect1 and rect2
 
@@ -349,6 +405,8 @@ bool CheckCollision(const SDL_Rect &rect1, const SDL_Rect &rect2){
     return true;
 }
 
+// speciifcally checks if log opbjects collide with player
+// true if they do, false otherwise
 bool CheckLogCollisions(){
     for(const auto &p : logs){
         if(CheckCollision(p.pos, playerPos))
@@ -359,6 +417,7 @@ bool CheckLogCollisions(){
 
 }
 
+// returns a pointer to the log that player collides with
 Log * getLog(){
     for(auto &p : logs){
         if(CheckCollision(p.pos, playerPos))
@@ -368,9 +427,8 @@ Log * getLog(){
 
 }
 
-
-
-
+// spcifically checks if trucks collide with player
+// true if they collide, false otherwise
 bool CheckEnemyCollisions(){
     for(const auto &p : enemies){
         if(CheckCollision(p.pos, playerPos))
@@ -380,8 +438,12 @@ bool CheckEnemyCollisions(){
     return false;
 
 }
+
+// Adds 3 enemies to a spciifc row
+// row is determined by value of lastEnemyPos variable
 void AddEnemy(){
     int speed = rand() % 3 + 1;
+    // used to make random between left and right direciton
     if((rand() % 2 ) == 0){
         enemies.push_back(Enemy({rand() % 100, lastEnemyPos, 20, 20}, speed, Direction::Right));
         enemies.push_back(Enemy({rand() % 100 + 75, lastEnemyPos, 20, 20}, speed, Direction::Right));
@@ -395,20 +457,19 @@ void AddEnemy(){
     lastEnemyPos += 25; // so next set of enemies is on the next row
 }
 
+// Adds 1 long log and 1 short log to specific row
+// row is determined by values of lastEnemyPos variable
+// takes if direction to make sure they move in opposite directions when called in other functions
 void AddLog(Direction dir){
-    //if((rand() % 2) == 0){
-        int speed = rand() % 3 + 1;
-        logs.push_back(Log({rand() % 100, lastEnemyPos, 40, 20}, speed, dir));
-        logs.push_back(Log({rand() % 100 + 175, lastEnemyPos, 20, 20}, speed, dir));
-    /*}
-    else{
-        logs.push_back(Log({rand() % 100, lastEnemyPos, 40, 20}, 2, Direction::Left));
-        logs.push_back(Log({rand() % 100 + 100, lastEnemyPos, 40, 20}, 2, Direction::Left));
-        logs.push_back(Log({rand() % 100 + 200, lastEnemyPos, 20, 20}, 2, Direction::Left));
-    }*/
+    int speed = rand() % 3 + 1; // rand spped for entire row
+    logs.push_back(Log({rand() % 100, lastEnemyPos, 40, 20}, speed, dir));
+    logs.push_back(Log({rand() % 100 + 175, lastEnemyPos, 20, 20}, speed, dir));
     lastEnemyPos += 25; // so the next set of logs is on the next row
 }
+
+// adds enough objects ot fill the screen
 void addEnemies(){
+    // alternate left and right direction so player can always cross
     AddLog(Right);
     AddLog(Left);
     AddLog(Right);
@@ -416,7 +477,7 @@ void addEnemies(){
     AddLog(Right);
     AddLog(Left);
     AddLog(Right);
-    lastEnemyPos+=50;
+    lastEnemyPos+=50; // skip green grass in middle
     AddEnemy();
     AddEnemy();
     AddEnemy();
@@ -425,9 +486,48 @@ void addEnemies(){
     AddEnemy();
     AddEnemy();
 }
+
+// puts the player on bottom of map
 void ResetPlayerPos(){
     playerPos.x = (windowRect.w /2) - (playerPos.w /2);
     playerPos.y = windowRect.h - bottomBar.h;
 }
 
+// displays game Over screen with player options
+// happens when player dies
+void gameOver(){
 
+    // render the game over screen
+    bool dead = true;
+    while(dead){
+        SDL_RenderClear(renderer);
+        SDL_Texture * curr = LoadTexture("img/gameOver.png");
+        SDL_RenderCopy(renderer, curr, NULL, &backgroundPos);
+        SDL_RenderPresent(renderer);
+        SDL_Event event;
+        
+        // take in user input
+        while(SDL_PollEvent(&event)){
+            if(event.type == SDL_QUIT)
+                return;
+            else if(event.type == SDL_KEYDOWN){
+                switch(event.key.keysym.sym){
+                    /* implement restart */
+                    case SDLK_r:
+                        logs.clear();
+                        enemies.clear();
+                        lastEnemyPos = 50;
+                        dead = false;
+                        loadObjects();
+                        RunGame();
+                        break;
+                    case SDLK_q:
+                        dead = false;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+}
