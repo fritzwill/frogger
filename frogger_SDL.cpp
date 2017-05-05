@@ -30,7 +30,7 @@ bool CheckCollision( const SDL_Rect &rect1, const SDL_Rect &rect2);
 bool CheckEnemyCollisions();
 bool CheckLogCollisions();
 
-// WINDOW SIZE
+// Global Variables
 SDL_Rect windowRect = {900, 200, 300, 500};
 
 int movementFactor = 25;
@@ -50,7 +50,7 @@ SDL_Texture* playerTexture;
 SDL_Texture* backgroundTexture;
 SDL_Texture* barTexture;
 
-
+// Objects in game
 struct Log{
     Log(SDL_Rect pos_, int speed_, Direction dir_){
         pos = pos_;
@@ -91,6 +91,8 @@ int main(int argc, char*args[]){
     backgroundTexture   = LoadTexture("img/background.bmp");
     barTexture          = LoadTexture("img/bar.bmp");
     srand(time(NULL));
+    
+    // Adding moving objects
     AddLog(Right);
     AddLog(Left);
     AddLog(Right);
@@ -106,6 +108,7 @@ int main(int argc, char*args[]){
     AddEnemy();
     AddEnemy();
     AddEnemy();
+    
     // Init top and bottom bar
     topBar.x = 0;
     topBar.y = 0;
@@ -127,7 +130,8 @@ int main(int argc, char*args[]){
 
 void RunGame(){
     bool loop = true;
-
+    int score = 0;
+    bool onLog = false;
     while(loop){
         SDL_Event event;
         while(SDL_PollEvent(&event)){
@@ -160,16 +164,25 @@ void RunGame(){
         MoveLogs();
 
         // Check collisions against enemies
-        if(CheckEnemyCollisions() || CheckLogCollisions()) 
+        if(CheckEnemyCollisions()) 
             ResetPlayerPos();
 
+        // Check collisions against logs
+        if (CheckLogCollisions())
+            onLog = true;
+            
         // check collision against bottom bar
         // since top bar covers the entire width, we only need to check y value
         // topBar.y refers to the top of the top bar, so topBar.y + topBar.h
         
-        if(playerPos.y < (topBar.y + topBar.h))
+        if(playerPos.y < (topBar.y + topBar.h)){
             ResetPlayerPos();
+            score += 10;
+            // increase speed of objects
+            for (auto &p : enemies) p.speed = (p.speed) * 1.2; 
+            for (auto &p : logs) p.speed = (p.speed) * 1.2;
 
+        }
         Render();
 
         // add a 16 msec delay so it funs at ~60fps
@@ -337,7 +350,7 @@ void AddEnemy(){
         enemies.push_back(Enemy({rand() % 100 + 75, lastEnemyPos, 20, 20}, 1, Direction::Left));
         enemies.push_back(Enemy({rand() % 100 + 175, lastEnemyPos, 20, 20}, 1, Direction::Left));
     }
-    lastEnemyPos += 25;
+    lastEnemyPos += 25; // so next set of enemies is on the next row
 }
 
 void AddLog(Direction dir){
@@ -351,7 +364,7 @@ void AddLog(Direction dir){
         logs.push_back(Log({rand() % 100 + 100, lastEnemyPos, 40, 20}, 2, Direction::Left));
         logs.push_back(Log({rand() % 100 + 200, lastEnemyPos, 20, 20}, 2, Direction::Left));
     }*/
-    lastEnemyPos += 25;
+    lastEnemyPos += 25; // so the next set of logs is on the next row
 }
 void ResetPlayerPos(){
     playerPos.x = (windowRect.w /2) - (playerPos.w /2);
