@@ -53,6 +53,8 @@ bool CheckCollision( const SDL_Rect &rect1, const SDL_Rect &rect2);
 bool CheckEnemyCollisions();
 bool CheckLogCollisions();
 Log * getLog();
+int getDiff(SDL_Rect, SDL_Rect);
+void addEnemies();
 
 // Global Variables
 SDL_Rect windowRect = {900, 200, 300, 500};
@@ -94,21 +96,7 @@ int main(int argc, char*args[]){
     srand(time(NULL));
     
     // Adding moving objects
-    AddLog(Right);
-    AddLog(Left);
-    AddLog(Right);
-    AddLog(Left);
-    AddLog(Right);
-    AddLog(Left);
-    AddLog(Right);
-    lastEnemyPos+=50;
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
-    AddEnemy();
+    addEnemies();
     
     // Init top and bottom bar
     topBar.x = 0;
@@ -132,12 +120,22 @@ int main(int argc, char*args[]){
 void RunGame(){
     bool loop = true;
     int score = 0;
+    int diff = 0;
     bool onLog = false;
     Log *currLog;
     while(loop){
         SDL_Event event;
         if (onLog){
-            playerPos.x = currLog->pos.x;
+
+            //diff = getDiff(playerPos, currLog->pos);
+            switch(currLog->dir){
+                case(Right):
+                    playerPos.x += currLog->speed;
+                    break;
+                case(Left):
+                    playerPos.x -= currLog->speed;
+                    break;
+            }
         }
             
         while(SDL_PollEvent(&event)){
@@ -171,14 +169,16 @@ void RunGame(){
 
         // Check collisions against enemies
         if(CheckEnemyCollisions()) 
-            //std::cout << "HAHAHA";            
-            ResetPlayerPos();
+            std::cout << "HAHAHA";            
+            //ResetPlayerPos();
 
         // Check collisions against logs
         if (CheckLogCollisions()){
             onLog = true;
             currLog = getLog();
             std::cout << "in func" << std::endl;
+            //diff = getDiff(playerPos, currLog->pos);
+            
             
         }
         else{
@@ -187,7 +187,7 @@ void RunGame(){
         }
         
         std::cout << "passed func" << std::endl;
-        if (!onLog && playerPos.y < 224) { // not on log and above halfway
+        if (!onLog && playerPos.y < 224 && playerPos.y > 45) { // not on log and above halfway
             ResetPlayerPos();
         }
 
@@ -199,8 +199,27 @@ void RunGame(){
             ResetPlayerPos();
             score += 10;
             // increase speed of objects
-            for (auto &p : enemies) p.speed = (p.speed) * 1.2; 
-            for (auto &p : logs) p.speed = (p.speed) * 1.2;
+            std::vector<int> logSpeeds;
+            std::vector<int> truckSpeeds;
+            for(auto &p : logs){
+               logSpeeds.push_back(p.speed);
+            }
+            for(auto &p : enemies)
+                truckSpeeds.push_back(p.speed); 
+            logs.clear();
+            enemies.clear();
+            lastEnemyPos = 50;
+            addEnemies();
+            int count = 0; 
+            for (auto &p : enemies){
+                p.speed = truckSpeeds[count] * 1.2; 
+                count++;
+            }
+            count = 0;
+            for (auto &p : logs){
+                p.speed = logSpeeds[count] * 1.2;
+                count++;
+            }
             
         }
         Render();
@@ -368,26 +387,30 @@ bool CheckEnemyCollisions(){
     return false;
 
 }
+int getDiff(SDL_Rect player, SDL_Rect log){
+    return player.x - log.x;
+}
 
 void AddEnemy(){
+    int speed = rand() % 3 + 1;
     if((rand() % 2 ) == 0){
-        enemies.push_back(Enemy({rand() % 100, lastEnemyPos, 20, 20}, 1, Direction::Right));
-        enemies.push_back(Enemy({rand() % 100 + 75, lastEnemyPos, 20, 20}, 1, Direction::Right));
-        enemies.push_back(Enemy({rand() % 100 + 175, lastEnemyPos, 20, 20}, 1, Direction::Right));
+        enemies.push_back(Enemy({rand() % 100, lastEnemyPos, 20, 20}, speed, Direction::Right));
+        enemies.push_back(Enemy({rand() % 100 + 75, lastEnemyPos, 20, 20}, speed, Direction::Right));
+        enemies.push_back(Enemy({rand() % 100 + 175, lastEnemyPos, 20, 20}, speed, Direction::Right));
     }
     else{
-        enemies.push_back(Enemy({rand() % 100, lastEnemyPos, 20, 20}, 1, Direction::Left));
-        enemies.push_back(Enemy({rand() % 100 + 75, lastEnemyPos, 20, 20}, 1, Direction::Left));
-        enemies.push_back(Enemy({rand() % 100 + 175, lastEnemyPos, 20, 20}, 1, Direction::Left));
+        enemies.push_back(Enemy({rand() % 100, lastEnemyPos, 20, 20}, speed, Direction::Left));
+        enemies.push_back(Enemy({rand() % 100 + 75, lastEnemyPos, 20, 20}, speed, Direction::Left));
+        enemies.push_back(Enemy({rand() % 100 + 175, lastEnemyPos, 20, 20}, speed, Direction::Left));
     }
     lastEnemyPos += 25; // so next set of enemies is on the next row
 }
 
 void AddLog(Direction dir){
     //if((rand() % 2) == 0){
-        logs.push_back(Log({rand() % 100, lastEnemyPos, 40, 20}, 2, dir));
-        logs.push_back(Log({rand() % 100 + 75, lastEnemyPos, 40, 20}, 2, dir));
-        logs.push_back(Log({rand() % 100 + 175, lastEnemyPos, 20, 20}, 2, dir));
+        int speed = rand() % 3 + 1;
+        logs.push_back(Log({rand() % 100, lastEnemyPos, 40, 20}, speed, dir));
+        logs.push_back(Log({rand() % 100 + 175, lastEnemyPos, 20, 20}, speed, dir));
     /*}
     else{
         logs.push_back(Log({rand() % 100, lastEnemyPos, 40, 20}, 2, Direction::Left));
@@ -395,6 +418,23 @@ void AddLog(Direction dir){
         logs.push_back(Log({rand() % 100 + 200, lastEnemyPos, 20, 20}, 2, Direction::Left));
     }*/
     lastEnemyPos += 25; // so the next set of logs is on the next row
+}
+void addEnemies(){
+    AddLog(Right);
+    AddLog(Left);
+    AddLog(Right);
+    AddLog(Left);
+    AddLog(Right);
+    AddLog(Left);
+    AddLog(Right);
+    lastEnemyPos+=50;
+    AddEnemy();
+    AddEnemy();
+    AddEnemy();
+    AddEnemy();
+    AddEnemy();
+    AddEnemy();
+    AddEnemy();
 }
 void ResetPlayerPos(){
     playerPos.x = (windowRect.w /2) - (playerPos.w /2);
