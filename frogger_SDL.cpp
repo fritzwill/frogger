@@ -12,44 +12,6 @@ enum /*class*/ Direction{
     Right
 };
 
-// PROTOTYPES
-bool InitEverything();
-bool InitSDL();
-bool CreateWindow();
-bool CreateRenderer();
-void SetupRenderer();
-SDL_Texture * LoadTexture(const std::string &str);
-void Render();
-void RunGame();
-void AddEnemy();
-void AddLog(Direction dir );
-void MoveEnemies();
-void MoveLogs();
-void ResetPlayerPos();
-bool CheckCollision( const SDL_Rect &rect1, const SDL_Rect &rect2);
-bool CheckEnemyCollisions();
-bool CheckLogCollisions();
-
-// Global Variables
-SDL_Rect windowRect = {900, 200, 300, 500};
-
-int movementFactor = 25;
-int lastEnemyPos = 50;
-
-SDL_Window * window;
-SDL_Renderer* renderer;
-
-SDL_Rect playerPos;
-SDL_Rect topBar;
-SDL_Rect bottomBar;
-SDL_Rect backgroundPos;
-
-SDL_Texture* enemyTexture;
-SDL_Texture* logTexture;
-SDL_Texture* playerTexture;
-SDL_Texture* backgroundTexture;
-SDL_Texture* barTexture;
-
 // Objects in game
 struct Log{
     Log(SDL_Rect pos_, int speed_, Direction dir_){
@@ -72,6 +34,45 @@ struct Enemy{
     int speed;
     Direction dir;
 };
+
+// PROTOTYPES
+bool InitEverything();
+bool InitSDL();
+bool CreateWindow();
+bool CreateRenderer();
+void SetupRenderer();
+SDL_Texture * LoadTexture(const std::string &str);
+void Render();
+void RunGame();
+void AddEnemy();
+void AddLog(Direction dir );
+void MoveEnemies();
+void MoveLogs();
+void ResetPlayerPos();
+bool CheckCollision( const SDL_Rect &rect1, const SDL_Rect &rect2);
+bool CheckEnemyCollisions();
+bool CheckLogCollisions();
+Log * getLog();
+
+// Global Variables
+SDL_Rect windowRect = {900, 200, 300, 500};
+
+int movementFactor = 25;
+int lastEnemyPos = 50;
+
+SDL_Window * window;
+SDL_Renderer* renderer;
+
+SDL_Rect playerPos;
+SDL_Rect topBar;
+SDL_Rect bottomBar;
+SDL_Rect backgroundPos;
+
+SDL_Texture* enemyTexture;
+SDL_Texture* logTexture;
+SDL_Texture* playerTexture;
+SDL_Texture* backgroundTexture;
+SDL_Texture* barTexture;
 
 std::vector<Enemy> enemies;
 std::vector<Log> logs;
@@ -132,8 +133,13 @@ void RunGame(){
     bool loop = true;
     int score = 0;
     bool onLog = false;
+    Log *currLog;
     while(loop){
         SDL_Event event;
+        if (onLog){
+            playerPos.x = currLog->pos.x;
+        }
+            
         while(SDL_PollEvent(&event)){
             if(event.type == SDL_QUIT)
                 loop = false;
@@ -165,12 +171,26 @@ void RunGame(){
 
         // Check collisions against enemies
         if(CheckEnemyCollisions()) 
+            //std::cout << "HAHAHA";            
             ResetPlayerPos();
 
         // Check collisions against logs
-        if (CheckLogCollisions())
+        if (CheckLogCollisions()){
             onLog = true;
+            currLog = getLog();
+            std::cout << "in func" << std::endl;
             
+        }
+        else{
+            onLog = false;
+            currLog = NULL;
+        }
+        
+        std::cout << "passed func" << std::endl;
+        if (!onLog && playerPos.y < 224) { // not on log and above halfway
+            ResetPlayerPos();
+        }
+
         // check collision against bottom bar
         // since top bar covers the entire width, we only need to check y value
         // topBar.y refers to the top of the top bar, so topBar.y + topBar.h
@@ -181,7 +201,7 @@ void RunGame(){
             // increase speed of objects
             for (auto &p : enemies) p.speed = (p.speed) * 1.2; 
             for (auto &p : logs) p.speed = (p.speed) * 1.2;
-
+            
         }
         Render();
 
@@ -210,12 +230,12 @@ void Render(){
     SDL_RenderCopy(renderer, backgroundTexture, NULL, &backgroundPos);
     SDL_RenderCopy(renderer, barTexture, NULL, &topBar);
     SDL_RenderCopy(renderer, barTexture, NULL, &bottomBar);
-    SDL_RenderCopy(renderer, playerTexture, NULL, &playerPos);
     for(const auto &p : enemies)
         SDL_RenderCopy(renderer, enemyTexture, NULL, &p.pos);
     for(const auto &p : logs)
         SDL_RenderCopy(renderer, logTexture, NULL, &p.pos);
 
+    SDL_RenderCopy(renderer, playerTexture, NULL, &playerPos);
     // render the changes above
     SDL_RenderPresent(renderer);
 }
@@ -326,6 +346,16 @@ bool CheckLogCollisions(){
     return false;
 
 }
+
+Log * getLog(){
+    for(auto &p : logs){
+        if(CheckCollision(p.pos, playerPos))
+            return &p;
+    }
+    return NULL;
+
+}
+
 
 
 
