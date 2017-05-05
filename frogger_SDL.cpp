@@ -1,6 +1,7 @@
 //Using SDL, SDL_image, standard math, and strings
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -42,7 +43,7 @@ bool CreateWindow();
 bool CreateRenderer();
 void SetupRenderer();
 SDL_Texture * LoadTexture(const std::string &str);
-void Render();
+void Render(int);
 void RunGame();
 void AddEnemy();
 void AddLog(Direction dir );
@@ -69,12 +70,14 @@ SDL_Rect playerPos;
 SDL_Rect topBar;
 SDL_Rect bottomBar;
 SDL_Rect backgroundPos;
+SDL_Rect scorePos;
 
 SDL_Texture* enemyTexture;
 SDL_Texture* logTexture;
 SDL_Texture* playerTexture;
 SDL_Texture* backgroundTexture;
 SDL_Texture* barTexture;
+SDL_Texture* scoreTexture;
 
 std::vector<Enemy> enemies;
 std::vector<Log> logs;
@@ -113,6 +116,12 @@ int main(int argc, char*args[]){
     playerPos.w = 20;
     playerPos.h = 15;
     ResetPlayerPos();
+    
+    // Initialize score
+    scorePos.x = 10;
+    scorePos.y = windowRect.h - 20;
+    scorePos.w = windowRect.w / 8;
+    scorePos.h = 20;
 
     RunGame();
 }
@@ -176,7 +185,7 @@ void RunGame(){
         if (CheckLogCollisions()){
             onLog = true;
             currLog = getLog();
-            std::cout << "in func" << std::endl;
+            //std::cout << "in func" << std::endl;
             //diff = getDiff(playerPos, currLog->pos);
             
             
@@ -222,7 +231,7 @@ void RunGame(){
             }
             
         }
-        Render();
+        Render(score);
 
         // add a 16 msec delay so it funs at ~60fps
         SDL_Delay(16);
@@ -242,7 +251,7 @@ SDL_Texture* LoadTexture(const std::string &str){
     return texture;
 }
 
-void Render(){
+void Render(int score){
     // Clear the window and make it red
     SDL_RenderClear(renderer);
 
@@ -255,11 +264,23 @@ void Render(){
         SDL_RenderCopy(renderer, logTexture, NULL, &p.pos);
 
     SDL_RenderCopy(renderer, playerTexture, NULL, &playerPos);
+    
+    // Score
+    TTF_Font * Sans = TTF_OpenFont("Sans.ttf", 18);
+    SDL_Color Red = {255, 0, 0};
+    SDL_Surface * scoreSurface = TTF_RenderText_Solid(Sans, (const char *)(&score), Red);
+    scoreTexture = SDL_CreateTextureFromSurface(renderer, scoreSurface);
+    SDL_RenderCopy(renderer, scoreTexture, NULL, &scorePos);
     // render the changes above
     SDL_RenderPresent(renderer);
 }
 bool InitEverything(){
     if(!InitSDL()) return false;
+    if(!TTF_Init()) {
+        std::cout << "fuck" << std::endl;
+        printf("TT: %s", TTF_GetError());
+        return false;
+    }
     if(!CreateWindow()) return false;
     if(!CreateRenderer()) return false;
     SetupRenderer();
