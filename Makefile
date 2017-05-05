@@ -16,5 +16,10 @@ OBJ_NAME = frogger_SDL
 
 #This is the target that compiles our executable
 all : $(OBJS)
-	$(CC) $(OBJS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)
+	@echo Compiling frogger_SDL...
+	@$(CC) $(OBJS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)
+
+clean:
+	@echo Cleaning...
+	@rm -f frogger_SDL
 
