@@ -223,6 +223,15 @@ void RunGame(){
             loop = false;
             continue;
         }
+        
+        // check if player is off screen
+        if(playerPos.y > windowRect.h)
+            playerPos.y = windowRect.h - 20;
+        else if(playerPos.x < 0)
+            playerPos.x = 0;
+        else if(playerPos.x > windowRect.w)
+            playerPos.x = windowRect.w - playerPos.w;
+
 
         // check collision against top bar (win the level)
         // since top bar covers the entire width, we only need to check y value
